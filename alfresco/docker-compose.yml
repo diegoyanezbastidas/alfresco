@@ -1,0 +1,50 @@
+version: '2'
+services:
+  alfresco:
+    image: webcenter/rancher-alfresco:v5.1-201605-1
+    environment:
+      CIFS_ENABLED: 'false'
+      FTP_ENABLED: 'false'
+    stdin_open: true
+    tty: true
+    links:
+    - postgres:db
+    volumes_from:
+    - alfresco-data
+    ports:
+    - 8989:8080/tcp
+    labels:
+      io.rancher.sidekicks: alfresco-data
+  postgres-data:
+    image: alpine
+    network_mode: none
+    volumes:
+    - /var/lib/postgresql/data/pgdata
+    command:
+    - /bin/true
+    labels:
+      io.rancher.container.start_once: 'true'
+  alfresco-data:
+    image: alpine
+    network_mode: none
+    volumes:
+    - /opt/alfresco/alf_data
+    links:
+    - postgres:db
+    command:
+    - /bin/true
+    labels:
+      io.rancher.container.start_once: 'true'
+  postgres:
+    image: postgres:9.4
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_DB: alfresco
+      POSTGRES_PASSWORD: alfresco
+      POSTGRES_USER: alfresco
+    stdin_open: true
+    tty: true
+    volumes_from:
+    - postgres-data
+    labels:
+      io.rancher.sidekicks: postgres-data
